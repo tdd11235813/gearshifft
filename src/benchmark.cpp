@@ -10,8 +10,17 @@ template<typename... Types>
 using List = boost::mpl::list<Types...>;
 
 // ----------------------------------------------------------------------------
+#if defined(LiFFT_ENABLED)
+#include "lifft.hpp"
+using namespace gearshifft::LiFFT;
+using FFTs              = List<Inplace_Real,
+                               Inplace_Complex,
+                               Outplace_Real,
+                               Outplace_Complex>;
+using Precisions        = List<float, double>;
+using FFT_Is_Normalized = std::false_type;
 
-#ifdef CUDA_ENABLED
+#elif defined(CUDA_ENABLED)
 #include "cufft.hpp"
 using namespace gearshifft::CuFFT;
 using FFTs              = List<Inplace_Real,

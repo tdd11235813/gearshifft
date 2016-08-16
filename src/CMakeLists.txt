@@ -81,6 +81,24 @@ if(NOT (CLFFT_FOUND OR CUDA_FOUND OR HCFFT_FOUND))
 endif()
 
 #------------------------------------------------------------------------------
+# LiFFT
+#------------------------------------------------------------------------------
+function(add_exec_lifft Tlib)
+  set(PROJECT_EXEC gearshifft_lifft_${Tlib})
+  add_executable(${PROJECT_EXEC} ${SOURCES})
+  if (Tlib STREQUAL "cufft")
+    target_compile_definitions(${PROJECT_EXEC} PUBLIC -DCUDA_ENABLED -DLiFFT_ENABLED)
+    set(LIBS ${CUDA_LIBRARIES} ${CUDA_CUFFT_LIBRARIES})
+#  elseif(Tlib STREQUAL "clfft")
+#    target_compile_definitions(${PROJECT_EXEC} PUBLIC -DOPENCL_ENABLED -DLiFFT_ENABLED)
+#    set(LIBS ${CLFFT_LIBRARIES} ${OPENCL_LIBRARIES})
+  endif()
+  # todo: fftw
+  target_link_libraries(${PROJECT_EXEC} ${Boost_LIBRARIES} ${LIBS})
+  add_test(NAME ${PROJECT_EXEC} COMMAND ${PROJECT_EXEC})
+endfunction()
+
+#------------------------------------------------------------------------------
 # Helper function to add specific FFT library benchmark
 #------------------------------------------------------------------------------
 function(add_exec Tlib)
@@ -113,5 +131,6 @@ else()
   set(SOURCES benchmark.cpp options.cpp)
   foreach(FFTLIB ${FFTLIBS})
     add_exec(${FFTLIB})
+    add_exec_lifft(${FFTLIB})
   endforeach()
 endif()

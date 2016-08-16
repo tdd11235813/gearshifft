@@ -216,6 +216,9 @@ namespace CuFFT {
       // see http://docs.nvidia.com/cuda/cufft/#unique_1972991535
       if(data_size_ >= (1ull<<32) || data_complex_size_ >= (1ull<<32))
         use64bit_ = true;
+      if(sizeof(TPrecision)==8 && NDim==1 && extents_[0]>=67108863) {
+        throw std::runtime_error("Skipped to avoid bug in cufft/CUDA 7.5");
+      }
     }
 
     ~CuFFTImpl() {
