@@ -23,6 +23,11 @@ namespace gearshifft {
     bool getVerbose() const {
       return verbose_;
     }
+
+    bool getListDevices() const {
+      return listDevices_;
+    }
+
     const std::string& getOutputFile() const {
       return outputFile_;
     }
@@ -36,7 +41,7 @@ namespace gearshifft {
     void parseExtent( const std::string& extent );
 
     /// processes command line arguments and apply the values to the variables
-    int process(int argc, char* argv[]);
+    int parse(std::vector<char*>&, std::vector<char*>&);
 
     const Extents1DVec& getExtents1D() const {
       return vector1D_;
@@ -55,6 +60,7 @@ namespace gearshifft {
     bool verbose_ = false;
     std::string outputFile_;
     std::string device_;
+    bool listDevices_ = false;
 
     Extents1DVec vector1D_;
     Extents2DVec vector2D_;

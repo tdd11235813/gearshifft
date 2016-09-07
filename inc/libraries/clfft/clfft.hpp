@@ -1,18 +1,19 @@
 #ifndef CLFFT_HPP_
 #define CLFFT_HPP_
 
-#include "application.hpp"
-#include "timer.hpp"
-#include "fft.hpp"
-#include "benchmark_suite.hpp"
-#include "clfft_helper.hpp"
-#include "traits.hpp"
+#include "core/application.hpp"
+#include "core/timer_opencl.hpp"
+#include "core/fft.hpp"
+#include "core/traits.hpp"
 
+#include "clfft_helper.hpp"
+
+#include <clFFT.h>
 #include <array>
 #include <algorithm>
-#include <clFFT.h>
 #include <stdexcept>
-#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/predicate.hpp> // iequals
+#include <boost/algorithm/string.hpp> // split, is_any_of
 
 namespace gearshifft
 {
@@ -64,9 +65,15 @@ namespace gearshifft
       cl_device_id device = 0;
       cl_device_id device_used = 0;
       cl_context ctx = 0;
+      std::shared_ptr<cl_event> event;
 
       static const std::string title() {
         return "ClFFT";
+      }
+
+      static const std::string getListDevices() {
+        auto ss = listClDevices();
+        return ss.str();
       }
 
       std::string getDeviceInfos() {
@@ -79,14 +86,28 @@ namespace gearshifft
         cl_context_properties props[3] = { CL_CONTEXT_PLATFORM, 0, 0 };
         cl_int err = CL_SUCCESS;
         cl_device_type devtype = CL_DEVICE_TYPE_GPU;
+        event = std::make_shared<cl_event>();
 
-        auto options_devtype = Options::getInstance().getDevice();
-        if(boost::iequals(options_devtype, "cpu")) // case insensitive compare
-          devtype = CL_DEVICE_TYPE_CPU;
-        else if(boost::iequals(options_devtype, "acc"))
-          devtype = CL_DEVICE_TYPE_ACCELERATOR;
+        const std::string options_devtype = Options::getInstance().getDevice();
+        std::regex e("^([0-9]+):([0-9]+)$");
+        if(std::regex_search(options_devtype, e)) {
+          std::vector<std::string> token;
+          boost::split(token, options_devtype, boost::is_any_of(":"));
+          unsigned long id_platform = std::stoul(token[0].c_str());
+          unsigned long id_device = std::stoul(token[1].c_str());
+          getPlatformAndDeviceByID(&platform, &device, id_platform, id_device);
+        }else{
+          if(boost::iequals(options_devtype, "cpu")) // case insensitive compare
+            devtype = CL_DEVICE_TYPE_CPU;
+          else if(boost::iequals(options_devtype, "acc"))
+            devtype = CL_DEVICE_TYPE_ACCELERATOR;
+          else if(boost::iequals(options_devtype, "gpu"))
+            devtype = CL_DEVICE_TYPE_GPU;
+          else
+            throw std::runtime_error("Unsupported device type");
+          findClDevice(devtype, &platform, &device);
+        }
 
-        findClDevice(devtype, &platform, &device);
         device_used = device;
         props[1] = (cl_context_properties)platform;
         ctx = clCreateContext( props, 1, &device, nullptr, nullptr, &err );
@@ -98,11 +119,14 @@ namespace gearshifft
 
       void destroy() {
         if(ctx) {
+          // @todo crashes at ClFFT/double/2187x625x729/Outplace_Complex with INVALID_EVENT on K20Xm
+          //CHECK_CL(clReleaseEvent(*event));
           CHECK_CL(clReleaseContext( ctx ));
           CHECK_CL(clReleaseDevice(device));
           CHECK_CL( clfftTeardown( ) );
           device = 0;
           ctx = 0;
+          event.reset();
         }
       }
     };
@@ -163,7 +187,8 @@ namespace gearshifft
         context_ = Application<Context>::getContext();
         if(context_.ctx==0)
           throw std::runtime_error("Context has not been created.");
-        queue_ = clCreateCommandQueue( context_.ctx, context_.device, 0, &err );
+//        queue_ = clCreateCommandQueue( context_.ctx, context_.device, 0, &err );
+        queue_ = clCreateCommandQueue( context_.ctx, context_.device, CL_QUEUE_PROFILING_ENABLE, &err );
         CHECK_CL(err);
 
         n_ = std::accumulate(cextents.begin(), cextents.end(), 1, std::multiplies<size_t>());
@@ -310,11 +335,10 @@ namespace gearshifft
                                        &queue_,
                                        0, // numWaitEvents
                                        0, // waitEvents
-                                       0, // outEvents
+                                       context_.event.get(), // outEvents
                                        &data_,  // input
                                        IsInplace ? &data_ : &data_complex_, // output
                                        0)); // tmpBuffer
-        CHECK_CL(clFinish(queue_));
       }
 
       void execute_backward() {
@@ -324,11 +348,10 @@ namespace gearshifft
                                        &queue_,
                                        0, // numWaitEvents
                                        nullptr, // waitEvents
-                                       nullptr, // outEvents
+                                       context_.event.get(), // outEvents
                                        IsInplace ? &data_ : &data_complex_, // input
                                        &data_, // output
                                        nullptr)); // tmpBuffer
-        CHECK_CL(clFinish(queue_));
       }
 
       template<typename THostData>
@@ -336,7 +359,7 @@ namespace gearshifft
         if(IsInplaceReal && NDim>1) {
           CHECK_CL(clEnqueueWriteBufferRect( queue_,
                                              data_,
-                                             CL_TRUE, // blocking_write
+                                             CL_FALSE, // blocking_write
                                              offset_, // buffer origin
                                              offset_, // host origin
                                              region_,
@@ -347,17 +370,17 @@ namespace gearshifft
                                              input,
                                              0, // num_events_in_wait_list
                                              nullptr, // event_wait_list
-                                             nullptr )); // event
+                                             context_.event.get() )); // event
         }else{
           CHECK_CL(clEnqueueWriteBuffer( queue_,
                                          data_,
-                                         CL_TRUE, // blocking_write
+                                         CL_FALSE, // blocking_write
                                          0, // offset
                                          getTransferSize(),
                                          input,
                                          0, // num_events_in_wait_list
                                          nullptr, // event_wait_list
-                                         nullptr )); // event
+                                         context_.event.get() )); // event
         }
       }
 
@@ -366,7 +389,7 @@ namespace gearshifft
         if(IsInplaceReal && NDim>1) {
           CHECK_CL(clEnqueueReadBufferRect( queue_,
                                             data_,
-                                            CL_TRUE, // blocking_write
+                                            CL_FALSE, // blocking_write
                                             offset_, // buffer origin
                                             offset_, // host origin
                                             region_,
@@ -377,17 +400,17 @@ namespace gearshifft
                                             output,
                                             0, // num_events_in_wait_list
                                             nullptr, // event_wait_list
-                                            nullptr )); // event
+                                            context_.event.get() )); // event
         }else{
           CHECK_CL(clEnqueueReadBuffer( queue_,
                                         data_,
-                                        CL_TRUE, // blocking_write
+                                        CL_FALSE, // blocking_write
                                         0, // offset
                                         getTransferSize(),
                                         output,
                                         0, // num_events_in_wait_list
                                         nullptr, // event_wait_list
-                                        nullptr )); // event
+                                        context_.event.get() )); // event
         }
       }
 
@@ -412,10 +435,10 @@ namespace gearshifft
       }
     };
 
-    typedef gearshifft::FFT<gearshifft::FFT_Inplace_Real, ClFFTImpl, TimerCPU> Inplace_Real;
-    typedef gearshifft::FFT<gearshifft::FFT_Outplace_Real, ClFFTImpl, TimerCPU> Outplace_Real;
-    typedef gearshifft::FFT<gearshifft::FFT_Inplace_Complex, ClFFTImpl, TimerCPU> Inplace_Complex;
-    typedef gearshifft::FFT<gearshifft::FFT_Outplace_Complex, ClFFTImpl, TimerCPU> Outplace_Complex;
+    typedef gearshifft::FFT<gearshifft::FFT_Inplace_Real, ClFFTImpl, TimerGPU<Context> > Inplace_Real;
+    typedef gearshifft::FFT<gearshifft::FFT_Outplace_Real, ClFFTImpl, TimerGPU<Context> > Outplace_Real;
+    typedef gearshifft::FFT<gearshifft::FFT_Inplace_Complex, ClFFTImpl, TimerGPU<Context> > Inplace_Complex;
+    typedef gearshifft::FFT<gearshifft::FFT_Outplace_Complex, ClFFTImpl, TimerGPU<Context> > Outplace_Complex;
   } // namespace ClFFT
 } // gearshifft
 

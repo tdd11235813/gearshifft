@@ -46,17 +46,15 @@ namespace gearshifft {
     }
 
     void copyTo(RealVector& vec) {
-      vec.reserve(size_);
-      for( size_t i : boost::counting_range(size_t(0), size_) ){
-        vec[i] = data_linear_[i];
-      }
+      vec.resize(size_);
+      std::copy(data_linear_.begin(), data_linear_.end(), vec.begin());
     }
 
     void copyTo(ComplexVector& vec) {
-      vec.reserve(size_);
-      for( size_t i : boost::counting_range(size_t(0), size_) ){
-        vec[i].x = data_linear_[i];
-        vec[i].y = 0;
+      vec.resize(size_);
+      for( size_t i=0; i<size_; ++i ){
+        vec[i].real(data_linear_[i]);
+        vec[i].imag(0);
       }
     }
 
@@ -65,7 +63,7 @@ namespace gearshifft {
       {
         double diff_sum = 0;
         double diff;
-        for( size_t i : boost::counting_range(size_t(0), size_) ){
+        for( size_t i=0; i<size_; ++i ){
           diff = sub<Normalize>(data,i);
           diff_sum += diff*diff;
         }
@@ -77,9 +75,9 @@ namespace gearshifft {
     template<bool Normalize>
     constexpr double sub(const ComplexVector& vector, size_t i) const {
       if(Normalize)
-        return 1.0/size_ * (vector[i].x) - data_linear_[i];
+        return 1.0/size_ * (vector[i].real()) - data_linear_[i];
       else
-        return static_cast<double>( vector[i].x - data_linear_[i] );
+        return static_cast<double>( vector[i].real() - data_linear_[i] );
     }
 
     template<bool Normalize>
@@ -101,7 +99,7 @@ namespace gearshifft {
 
         // allocate variables for all test cases
         data_linear_.resize(size_);
-        for( size_t i : boost::counting_range(size_t(0), size_) )
+        for( size_t i=0; i<size_; ++i )
         {
           data_linear_[i] = 1.0*rand()/RAND_MAX;
         }
