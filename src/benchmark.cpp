@@ -6,10 +6,8 @@ using List = gearshifft::List<Types...>;
 
 #if defined(LiFFT_ENABLED)
 #include "libraries/lifft/lifft.hpp"
-using namespace gearshifft::LiFFT;
-using FFTs              = List<Inplace_Real,
-                               Inplace_Complex,
-                               Outplace_Real,
+using namespace gearshifft::LibLiFFT;
+using FFTs              = List<Outplace_Real,
                                Outplace_Complex>;
 using Precisions        = List<float, double>;
 using FFT_Is_Normalized = std::false_type;

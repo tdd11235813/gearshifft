@@ -117,6 +117,7 @@ endif()
 #------------------------------------------------------------------------------
 # LiFFT
 #------------------------------------------------------------------------------
+include_directories("../inc/libraries/lifft")
 function(add_exec_lifft Tlib)
   set(PROJECT_EXEC gearshifft_lifft_${Tlib})
   add_executable(${PROJECT_EXEC} ${SOURCES})

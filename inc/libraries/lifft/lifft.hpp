@@ -1,6 +1,7 @@
 #ifndef LIFFT_HPP_
 #define LIFFT_HPP_
 
+#include "libLiFFT/FFT.hpp"
 #include "libLiFFT/FFT_Kind.hpp"
 #include "libLiFFT/FFT_Definition.hpp"
 #include "libLiFFT/types/Real.hpp"
@@ -9,17 +10,20 @@
 
 
 #ifdef CUDA_ENABLED
-#include "cufft.hpp"
+#include "libLiFFT/libraries/cuFFT/cuFFT.hpp"
+#include "libraries/cufft/cufft.hpp"
 #endif
 #ifdef OPENCL_ENABLED
-#include "clfft.hpp"
+#include "libLiFFT/libraries/clFFT.hpp"
+#include "libraries/clfft/clfft.hpp"
 #endif
 #ifdef FFTW_ENABLED
-#include "fftw.hpp"
+#include "libLiFFT/libraries/fftw.hpp"
+#include "libraries/fftw/fftw.hpp"
 #endif
 
 namespace gearshifft {
-namespace LiFFT {
+namespace LibLiFFT {
   namespace traits{
   }
 
@@ -40,6 +44,8 @@ namespace LiFFT {
    *
    * This class handles:
    * - {1D, 2D, 3D} x {R2C, C2R, C2C} x {inplace, outplace} x {float, double}.
+   * Outplace Real|Complex: lifft(h_ptr, dev_ptr)
+   * Excluded: Inplace Real|Complex: lifft(dev_ptr) (own memcpy, since Executer::copyIn is private)
    */
   template<typename T_FFT, // see fft_abstract.hpp (FFT_Inplace_Real, ...)
            typename T_Precision, // double, float
@@ -47,9 +53,11 @@ namespace LiFFT {
            >
   struct LiFFTImpl {
     using Extent = std::array<size_t,NDim>;
+    using Vec = LiFFT::types::Vec<NDim,size_t>;
 
     static constexpr
      bool IsInplace = T_FFT::IsInplace;
+    static_assert(IsInplace==false, "Inplace Transforms not supported at the moment.");
     static constexpr
      bool IsComplex = T_FFT::IsComplex;
     static constexpr
@@ -64,33 +72,33 @@ namespace LiFFT {
                                           < ::LiFFT::FFT_Kind::Complex2Complex,
                                             NDim,
                                             T_Precision,
-                                            std::true_type,
+                                            std::true_type, // Is_Fwd
                                             IsInplace >,
                                         ::LiFFT::FFT_Definition
                                           < ::LiFFT::FFT_Kind::Real2Complex,
                                             NDim,
                                             T_Precision,
-                                            std::true_type,
+                                            std::true_type, // Is_Fwd
                                             IsInplace > >::type;
     using FFTBackward= typename std::conditional<IsComplex,
                                         ::LiFFT::FFT_Definition
                                           < ::LiFFT::FFT_Kind::Complex2Complex,
                                             NDim,
                                             T_Precision,
-                                            std::false_type,
+                                            std::false_type, // Is_Fwd
                                             IsInplace >,
                                         ::LiFFT::FFT_Definition
                                           < ::LiFFT::FFT_Kind::Complex2Real,
                                             NDim,
                                             T_Precision,
-                                            std::false_type,
+                                            std::true_type, // Is_Fwd // true, otherwise LiFFT is complaining, that C2R is always inverse
                                             IsInplace > >::type;
 
     size_t n_;        // =[1]*..*[dim]
-    Extent extents_;
-    Extent extents_complex_;
-    RealOrComplexType* data_;
-    ComplexType* data_complex_;
+    Vec extents_;
+    Vec extents_complex_;
+    RealOrComplexType* data_;   // on host
+    ComplexType* data_complex_; // on device
 
     size_t             data_size_;
     size_t             data_complex_size_;
@@ -143,6 +151,7 @@ namespace LiFFT {
      * Allocate buffers on CUDA device
      */
     void malloc() {
+      CHECK_CUDA(cudaMalloc(&data_complex_, data_complex_size_));
     }
 
     // create FFT plan handle
@@ -158,26 +167,32 @@ namespace LiFFT {
       auto inWrapped = FFTForward::wrapInput( LiFFT::mem::wrapPtr<IsComplex>(
                                                 data_,
                                                 extents_) );
-      if(IsInplace) {
-        auto fft = ::LiFFT::makeFFT<FFT_Library>(inWrapped);
-        fft(inWrapped);
-      }else{
-        auto outWrapped = FFTForward::wrapOutput(LiFFT::mem::wrapPtr<true,true>(
-                                                   data_complex_,
-                                                   extents_complex_));
 
-        auto fft = ::LiFFT::makeFFT<FFT_Library>(inWrapped, outWrapped);
-        fft(inWrapped, outWrapped);
-      }
+      auto outWrapped = FFTForward::wrapOutput(LiFFT::mem::wrapPtr<true,true>( // is complex and device_ptr
+                                                 data_complex_,
+                                                 extents_complex_));
+
+      auto fft = ::LiFFT::makeFFT<FFT_Library>(inWrapped, outWrapped);
+      fft(inWrapped, outWrapped);
     }
 
     void execute_backward() {
+      auto inWrapped = FFTBackward::wrapInput( LiFFT::mem::wrapPtr<true,true>(
+                                                data_complex_,
+                                                extents_complex_) );
+
+      auto outWrapped = FFTBackward::wrapOutput(LiFFT::mem::wrapPtr<IsComplex>(
+                                                 data_,
+                                                 extents_));
+
+      auto fft = ::LiFFT::makeFFT<FFT_Library>(inWrapped, outWrapped);
+      fft(inWrapped, outWrapped);
     }
 
     template<typename THostData>
     void upload(THostData* input) {
 //      std::copy();
-      data_ = reinterpret_cast<RealType*>(input);
+      data_ = reinterpret_cast<RealOrComplexType*>(input);
     }
 
     template<typename THostData>
@@ -186,13 +201,16 @@ namespace LiFFT {
     }
 
     void destroy() {
+      CHECK_CUDA( cudaFree(data_complex_) );
+      data_complex_ = nullptr;
     }
 
   };
 
-  typedef gearshifft::FFT<gearshifft::FFT_Inplace_Real, LiFFTImpl, TimerGPU> Inplace_Real;
+  // we do not use Inplace
+  //typedef gearshifft::FFT<gearshifft::FFT_Inplace_Real, LiFFTImpl, TimerGPU> Inplace_Real;
+  //typedef gearshifft::FFT<gearshifft::FFT_Inplace_Complex, LiFFTImpl, TimerGPU> Inplace_Complex;
   typedef gearshifft::FFT<gearshifft::FFT_Outplace_Real, LiFFTImpl, TimerGPU> Outplace_Real;
-  typedef gearshifft::FFT<gearshifft::FFT_Inplace_Complex, LiFFTImpl, TimerGPU> Inplace_Complex;
   typedef gearshifft::FFT<gearshifft::FFT_Outplace_Complex, LiFFTImpl, TimerGPU> Outplace_Complex;
 
 }
