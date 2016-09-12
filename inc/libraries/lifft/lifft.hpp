@@ -191,7 +191,6 @@ namespace LibLiFFT {
 
     template<typename THostData>
     void upload(THostData* input) {
-//      std::copy();
       data_ = reinterpret_cast<RealOrComplexType*>(input);
     }
 
