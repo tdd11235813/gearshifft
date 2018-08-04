@@ -7,8 +7,8 @@
 if [ ! -e ${AMDAPPSDKROOT}/bin/x86_64/clinfo ]; then
 
     # Location from which get nonce and file name from
-    URL="http://developer.amd.com/amd-accelerated-parallel-processing-app-sdk/"
-    URLDOWN="http://developer.amd.com/amd-license-agreement-appsdk/"
+    URL="https://web.archive.org/web/20180124070930/http://developer.amd.com/amd-accelerated-parallel-processing-app-sdk/"
+    URLDOWN="https://web.archive.org/web/20180718031853/https://developer.amd.com/amd-license-agreement-appsdk/"
 
     #AMD APP SDK v3.0:
     if [[ $1 == "300" ]]; then
