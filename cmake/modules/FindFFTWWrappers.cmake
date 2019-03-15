@@ -202,8 +202,6 @@ else()
   message("FFTWWrappers was not able to find iomp5")
 endif()
 
-list(APPEND FFTWWrappers_MKL_LIBRARIES
-  $<$<NOT:$<C_COMPILER_ID:MSVC>>:m> "${CMAKE_DL_LIBS}")
 
 if(NOT FFTWWrappers_FIND_QUIETLY)
   message("++ FindFFTWWrappers")
