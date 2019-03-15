@@ -367,7 +367,11 @@ endif()
 #------------------------------------------------------------------------------
 
 if(GEARSHIFFT_BACKEND_FFTWWRAPPERS)
+  if(GEARSHIFFT_USE_STATIC_LIBS)
+    set(FFTWWrappers_USE_STATIC_LIBS ON) # otherwise find libs automatically
+  endif()
   find_package(FFTWWrappers ${_QUIET})
+
   if(FFTWWrappers_FOUND) # found FFTWWrappers for GNU or Intel
 
     if(FFTWWrappers_GNU_LIBRARIES AND NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU"
