@@ -141,7 +141,9 @@ find_file(
 if(EXISTS ${FFTWWrapper_include_file})
   get_filename_component(FFTWWrappers_MKL_INCLUDE_DIR ${FFTWWrapper_include_file} DIRECTORY)
 else()
-  message( "FFTWWrappers was not able to find fftw3.h in ${MKL_ROOT}")
+  if(NOT FFTWWrappers_FIND_QUIETLY)
+    message( "FFTWWrappers was not able to find fftw3.h in ${MKL_ROOT}")
+  endif()
 endif()
 
 find_library(
@@ -155,7 +157,9 @@ find_library(
 if(EXISTS ${MKL_INTEL})
   list(APPEND FFTWWrappers_MKL_LIBRARIES "${MKL_INTEL}")
 else()
-  message( "FFTWWrappers was not able to find ${MKL_INTERFACE_LIBNAME} in ${MKL_ROOT}")
+  if(NOT FFTWWrappers_FIND_QUIETLY)
+    message( "FFTWWrappers was not able to find ${MKL_INTERFACE_LIBNAME} in ${MKL_ROOT}")
+  endif()
 endif()
 
 find_library(
@@ -169,7 +173,9 @@ find_library(
 if(EXISTS ${MKL_INTEL_THREAD})
   list(APPEND FFTWWrappers_MKL_LIBRARIES "${MKL_INTEL_THREAD}")
 else()
-  message( "FFTWWrappers was not able to find mkl_intel_thread in ${MKL_ROOT}")
+  if(NOT FFTWWrappers_FIND_QUIETLY)
+    message( "FFTWWrappers was not able to find mkl_intel_thread in ${MKL_ROOT}")
+  endif()
 endif()
 
 find_library(
@@ -183,7 +189,9 @@ find_library(
 if(EXISTS ${MKL_CORE})
   list(APPEND FFTWWrappers_MKL_LIBRARIES "${MKL_CORE}")
 else()
-  message("FFTWWrappers was not able to find mkl_core in ${MKL_ROOT}")
+  if(NOT FFTWWrappers_FIND_QUIETLY)
+    message("FFTWWrappers was not able to find mkl_core in ${MKL_ROOT}")
+  endif()
 endif()
 
 
@@ -199,7 +207,9 @@ find_library(
 if(EXISTS ${MKL_IOMP5})
   list(APPEND FFTWWrappers_MKL_LIBRARIES "${MKL_IOMP5}")
 else()
-  message("FFTWWrappers was not able to find iomp5")
+  if(NOT FFTWWrappers_FIND_QUIETLY)
+    message("FFTWWrappers was not able to find iomp5")
+  endif()
 endif()
 
 
