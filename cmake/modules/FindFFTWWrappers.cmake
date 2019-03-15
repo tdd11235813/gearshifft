@@ -24,10 +24,8 @@
 #Check whether to search static or dynamic libs
 set( CMAKE_FIND_LIBRARY_SUFFIXES_SAV ${CMAKE_FIND_LIBRARY_SUFFIXES} )
 
-if( FFTWWrappers_USE_STATIC_LIBS )
+if( FFTWWrappers_USE_STATIC_LIBS ) # find static libs only
   set( CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_STATIC_LIBRARY_SUFFIX} )
-else()
-  set( CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_SHARED_LIBRARY_SUFFIX} )
 endif()
 
 # If environment variable FFTWWrappers_ROOT is defined, it has the same effect as the cmake variable
@@ -58,24 +56,28 @@ endif()
 
 ################################### FFTWWrappers related ##################################
 # see: http://geco.mines.edu/files/userguides/techReports/mklWrappers/
+set(_LIBSTUB_GNU "fftw3xc_gnu")
+set(_LIBSTUB_INTEL "fftw3xc_intel")
+set(_LIBSTUB_MSVS "fftw3xc_msvs")
+
 #initialize library variables
 find_library(
   FFTWWrappers_GNU_LIBRARIES
-  NAMES "fftw3xc_gnu"
+  NAMES ${_LIBSTUB_GNU}
   PATHS ${FFTWWrappers_ROOT}
   PATH_SUFFIXES "lib" "lib64"
   NO_DEFAULT_PATH
   )
 find_library(
   FFTWWrappers_GNU_LIBRARIES
-  NAMES "fftw3xc_gnu"
+  NAMES ${_LIBSTUB_GNU}
   PATHS ${MKL_ROOT}
   PATH_SUFFIXES "lib" "lib/${MKL_INTERFACE_LIBDIR}_lin" "lib/${MKL_INTERFACE_LIBDIR}_mac" "lib/${MKL_INTERFACE_LIBDIR}"
   NO_DEFAULT_PATH
   )
 find_library(
   FFTWWrappers_GNU_LIBRARIES
-  NAMES "fftw3xc_gnu"
+  NAMES ${_LIBSTUB_GNU}
   )
 
 if(EXISTS ${FFTWWrappers_GNU_LIBRARIES})
@@ -84,21 +86,21 @@ endif()
 
 find_library(
   FFTWWrappers_INTEL_LIBRARIES
-  NAMES "fftw3xc_intel"
+  NAMES ${_LIBSTUB_INTEL}
   PATHS ${FFTWWrappers_ROOT}
   PATH_SUFFIXES "lib" "lib64"
   NO_DEFAULT_PATH
   )
 find_library(
   FFTWWrappers_INTEL_LIBRARIES
-  NAMES "fftw3xc_intel"
+  NAMES ${_LIBSTUB_INTEL}
   PATHS ${MKL_ROOT}
   PATH_SUFFIXES "lib" "lib/${MKL_INTERFACE_LIBDIR}_lin" "lib/${MKL_INTERFACE_LIBDIR}_mac" "lib/${MKL_INTERFACE_LIBDIR}_win" "lib/${MKL_INTERFACE_LIBDIR}"
   NO_DEFAULT_PATH
   )
 find_library(
   FFTWWrappers_INTEL_LIBRARIES
-  NAMES "fftw3xc_intel"
+  NAMES ${_LIBSTUB_INTEL}
   )
 
 if(EXISTS ${FFTWWrappers_INTEL_LIBRARIES})
@@ -107,21 +109,21 @@ endif()
 
 find_library(
   FFTWWrappers_MSVS_LIBRARIES
-  NAMES "fftw3xc_msvs"
+  NAMES ${_LIBSTUB_MSVS}
   PATHS ${FFTWWrappers_ROOT}
   PATH_SUFFIXES "lib" "lib64"
   NO_DEFAULT_PATH
   )
 find_library(
   FFTWWrappers_MSVS_LIBRARIES
-  NAMES "fftw3xc_msvs"
+  NAMES ${_LIBSTUB_MSVS}
   PATHS ${MKL_ROOT}
   PATH_SUFFIXES "lib/${MKL_INTERFACE_LIBDIR}_win" "lib/${MKL_INTERFACE_LIBDIR}"
   NO_DEFAULT_PATH
   )
 find_library(
   FFTWWrappers_MSVS_LIBRARIES
-  NAMES "fftw3xc_msvs"
+  NAMES ${_LIBSTUB_MSVS}
   )
 
 if(EXISTS ${FFTWWrappers_MSVS_LIBRARIES})
@@ -216,13 +218,13 @@ endif()
 if(NOT FFTWWrappers_FIND_QUIETLY)
   message("++ FindFFTWWrappers")
   message("++ FFTWWrappers_ROOT             : ${FFTWWrappers_ROOT}")
+  message("++ MKL_ROOT                      : ${MKL_ROOT}")
   message("++ FFTWWrappers_GNU_LIBRARIES    : ${FFTWWrappers_GNU_LIBRARIES}")
   message("++ FFTWWrappers_INTEL_LIBRARIES  : ${FFTWWrappers_INTEL_LIBRARIES}")
   message("++ FFTWWrappers_MSVS_LIBRARIES   : ${FFTWWrappers_MSVS_LIBRARIES}")
   message("++ FFTWWrappers_LIBRARY_DIR      : ${FFTWWrappers_LIBRARY_DIR}")
   message("++ FFTWWrappers_MKL_LIBRARIES    : ${FFTWWrappers_MKL_LIBRARIES}")
   message("++ FFTWWrappers_MKL_INCLUDE_DIR  : ${FFTWWrappers_MKL_INCLUDE_DIR}")
-  message("++ MKL_ROOT                      : ${MKL_ROOT}")
 endif()
 
 
