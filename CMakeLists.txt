@@ -78,7 +78,9 @@ find_package(Boost 1.59 REQUIRED ${_QUIET} COMPONENTS
   unit_test_framework
   program_options
   )
-
+if(NOT "${BOOST_ROOT}/include" MATCHES "${Boost_INCLUDE_DIR}")
+    message(WARNING "BOOST_ROOT ignored by FindBoost.")
+endif()
 include(boost_targets)
 
 #----------------------------------------------------------------------------
