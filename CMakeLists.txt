@@ -90,14 +90,6 @@ include(boost_targets)
 add_library(Common INTERFACE)
 add_library(gearshifft::Common ALIAS Common)
 
-# setting language requirements for all targets
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
-
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 # TODO: in cmake 3.8+ use target_compile_features(myTarget PUBLIC cxx_std_11)
 
 target_include_directories(Common INTERFACE
@@ -122,6 +114,12 @@ target_compile_options(Common INTERFACE
   $<$<CXX_COMPILER_ID:MSVC>:/wd4003>
   $<$<CXX_COMPILER_ID:MSVC>:/wd4996>
   )
+
+# C++14
+target_compile_features(Common INTERFACE cxx_std_14)
+# disable extensions (eg. to not use gnu++14).
+# cannot use interface ( see https://gitlab.kitware.com/cmake/cmake/issues/17183 )
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # gearshifft version.
 # As this information is built as own library, targets only have to relink,
