@@ -257,9 +257,11 @@ namespace gearshifft
            ||
            (std::is_same<TPrecision,double>::value && n_>(1<<26) && IsComplex==true))
           throw std::runtime_error("Unsupported lengths.");
-
+#if CL_VERSION_2_0
+        queue_ = clCreateCommandQueueWithProperties( context_.ctx, context_.device_used, 0, &err );
+#else
         queue_ = clCreateCommandQueue( context_.ctx, context_.device_used, 0, &err );
-//        queue_ = clCreateCommandQueue( context_.ctx, context_.device_used, CL_QUEUE_PROFILING_ENABLE, &err );
+#endif
         CHECK_CL(err);
 
 
