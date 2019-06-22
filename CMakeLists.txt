@@ -69,7 +69,9 @@ endif()
 
 if(GEARSHIFFT_USE_STATIC_LIBS)
   set(Boost_USE_STATIC_LIBS ON) # otherwise find libs automatically
-  message(STATUS "Static linking with Boost system libraries may give linker problems. Enable GEARSHIFFT_SUPERBUILD_EXT_DOWNLOAD_Boost then (requires GEARSHIFFT_USE_SUPERBUILD).")
+  if(NOT GEARSHIFFT_SUPERBUILD_BINARY_DIR) # not coming from superbuild mode
+    message(STATUS "Static linking with Boost system libraries may give linker problems. Enable GEARSHIFFT_SUPERBUILD_EXT_DOWNLOAD_Boost then (requires GEARSHIFFT_USE_SUPERBUILD).")
+  endif()
 endif()
 find_package(Boost 1.59 REQUIRED ${_QUIET} COMPONENTS
   system
