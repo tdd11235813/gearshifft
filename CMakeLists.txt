@@ -73,6 +73,10 @@ if(GEARSHIFFT_USE_STATIC_LIBS)
     message(STATUS "Static linking with Boost system libraries may give linker problems. Enable GEARSHIFFT_SUPERBUILD_EXT_DOWNLOAD_Boost then (requires GEARSHIFFT_USE_SUPERBUILD).")
   endif()
 endif()
+if(BOOST_ROOT) # if set then try to prevent Boost from ignoring BOOST_ROOT
+  set(Boost_NO_SYSTEM_PATHS ON)
+  set(Boost_NO_BOOST_CMAKE ON)
+endif()
 find_package(Boost 1.59 REQUIRED ${_QUIET} COMPONENTS
   system
   unit_test_framework

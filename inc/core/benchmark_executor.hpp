@@ -2,6 +2,8 @@
 #define BENCHMARK_EXECUTOR_HPP_
 #define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_ALTERNATIVE_INIT_API
+// https://github.com/boostorg/system/issues/26
+#define BOOST_ERROR_CODE_HEADER_ONLY
 
 #include "application.hpp"
 #include "benchmark_data.hpp"

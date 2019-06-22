@@ -1,3 +1,5 @@
+// https://github.com/boostorg/system/issues/26
+#define BOOST_ERROR_CODE_HEADER_ONLY
 #include "core/application.hpp"
 #include "core/options.hpp"
 

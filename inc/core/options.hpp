@@ -1,5 +1,7 @@
 #ifndef OPTIONS_HPP_
 #define OPTIONS_HPP_
+// https://github.com/boostorg/system/issues/26
+#define BOOST_ERROR_CODE_HEADER_ONLY
 
 #include "types.hpp"
 #pragma GCC diagnostic push
