@@ -147,11 +147,6 @@ target_compile_definitions(Common INTERFACE
   )
 #TODO: check paths
 
-if(NOT Boost_VERSION VERSION_LESS 1.68.0)
-  # https://github.com/boostorg/system/issues/26
-  target_compile_definitions(Common INTERFACE BOOST_ERROR_CODE_HEADER_ONLY)
-endif()
-
 target_link_libraries(Common INTERFACE
   gearshifft_version
   Boost::system

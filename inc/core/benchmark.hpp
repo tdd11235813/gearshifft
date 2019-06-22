@@ -3,6 +3,8 @@
 // we customize the main function of the unit test framework
 #define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_ALTERNATIVE_INIT_API
+// https://github.com/boostorg/system/issues/26
+#define BOOST_ERROR_CODE_HEADER_ONLY
 
 #include "application.hpp"
 #include "benchmark_suite.hpp"
