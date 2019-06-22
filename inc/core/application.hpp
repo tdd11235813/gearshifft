@@ -36,6 +36,11 @@
 #define GEARSHIFFT_ERROR_BOUND 0.00001
 #endif
 
+#ifndef GEARSHIFFT_STRINGIFY
+#define GEARSHIFFT_STRINGIFY_EXPAND(tok) #tok
+#define GEARSHIFFT_STRINGIFY(s) GEARSHIFFT_STRINGIFY_EXPAND(s)
+#endif
+
 namespace gearshifft {
 
   template<typename T_Context>
@@ -93,6 +98,16 @@ namespace gearshifft {
                        << ",\"Hostname\",\"" << boost::asio::ip::host_name() << "\""
                        << ",\"gearshifft\",\"" << gearshifft::gearshifft_version() << "\""
                        << ",\"tag\",\"" << T_Context::options().getTag() << "\""
+                       << ",\"BuildType\",\""
+#ifdef CMAKE_BUILD_TYPE
+                       << GEARSHIFFT_STRINGIFY(CMAKE_BUILD_TYPE)
+#endif
+                       << "\""
+                       << ",\"Compiler\",\""
+#if defined(CMAKE_CXX_COMPILER_ID) && defined(CMAKE_CXX_COMPILER_VERSION)
+                       << GEARSHIFFT_STRINGIFY(CMAKE_CXX_COMPILER_ID) << ": " << GEARSHIFFT_STRINGIFY(CMAKE_CXX_COMPILER_VERSION)
+#endif
+                       << "\""
         ;
       if(T_Context::options().getVerbose()) {
         resultAll_.print(std::cout,

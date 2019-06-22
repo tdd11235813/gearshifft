@@ -1,5 +1,5 @@
-#ifndef COMPLEX_HALF_H
-#define COMPLEX_HALF_H
+#ifndef COMPLEX_HALF_HPP
+#define COMPLEX_HALF_HPP
 
 #if GEARSHIFFT_FLOAT16_SUPPORT == 0
 
@@ -58,4 +58,4 @@ private:
 }
 
 #endif /* GEARSHIFFT_FLOAT16_SUPPORT */
-#endif /* COMPLEX-HALF_H */
+#endif /* COMPLEX-HALF_HPP */

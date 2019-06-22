@@ -11,8 +11,8 @@
 
 #define CHECK_CL( err ) gearshifft::ClFFT::check_error( err, #err,  __FILE__, __LINE__ )
 
-#define STRINGIFY(A) #A
-#define clFFTStatusCase(s) case s: return STRINGIFY(s)
+#define CLFFT_STRINGIFY(A) #A
+#define clFFTStatusCase(s) case s: return CLFFT_STRINGIFY(s)
 
 namespace gearshifft {
   namespace ClFFT {
