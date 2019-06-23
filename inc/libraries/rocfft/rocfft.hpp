@@ -7,6 +7,7 @@
 #include "core/types.hpp"
 #include "core/traits.hpp"
 #include "core/context.hpp"
+#include "core/utils.hpp"
 
 #include "rocfft_helper.hpp"
 
@@ -174,23 +175,20 @@ namespace RocFFT {
     RocFFTImpl(const Extent& cextents) {
       extents_ = interpret_as::column_major(cextents);
       extents_complex_ = extents_;
-      n_ = std::accumulate(extents_.begin(),
-                           extents_.end(),
-                           1,
-                           std::multiplies<size_t>());
+      n_ = utils::extentsProduct(extents_);
 
       if(IsComplex==false){
         extents_complex_.back() = (extents_.back()/2 + 1);
       }
 
-      n_complex_ = std::accumulate(extents_complex_.begin(),
-                                   extents_complex_.end(),
-                                   1,
-                                   std::multiplies<size_t>());
+      n_complex_ = utils::extentsProduct(extents_complex_);
 
       data_size_ = (IsInplaceReal? 2*n_complex_ : n_) * sizeof(value_type);
       if(IsInplace==false)
         data_complex_size_ = n_complex_ * sizeof(ComplexType);
+      // check supported sizes : https://rocfft.readthedocs.io/en/latest/library.html
+      if(utils::isNotOnlyDivBy_2_3_5(n_))
+          throw std::runtime_error("Unsupported lengths.");
 
       CHECK_HIP(rocfft_setup());
     }

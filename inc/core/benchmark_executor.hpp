@@ -8,6 +8,7 @@
 #include "application.hpp"
 #include "benchmark_data.hpp"
 #include "types.hpp"
+#include "utils.hpp"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"

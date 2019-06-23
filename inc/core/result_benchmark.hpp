@@ -2,6 +2,7 @@
 #define RESULT_BENCHMARK_HPP_
 
 #include "traits.hpp"
+#include "utils.hpp"
 
 #include <math.h>
 #include <iostream>
@@ -33,7 +34,7 @@ namespace gearshifft
         total_ *= ce[i];
       }
       dim_ = T_NDim;
-      dimkind_ = computeDimkind();
+      dimkind_ = utils::computeDimkind<T_NDim>(extents_);
       run_ = 0;
       isInplace_ = isInplace;
       isComplex_ = isComplex;
@@ -42,25 +43,6 @@ namespace gearshifft
       errorRun_ = -1;
     }
 
-    /**
-     * @retval 1 arbitrary extents
-     * @retval 2 power-of-two extents
-     * @retval 3 extents are combination of powers of (3,5,7) {3^r * 5^s * 7^t}
-     */
-    size_t computeDimkind() {
-      bool p2=true;
-      for( size_t k=0; k<dim_; ++k ) {
-        p2 &= powerOf(extents_[k], 2.0);
-      }
-      if(p2)
-        return 2;
-      for( size_t k=0; k<dim_; ++k ) {
-        if( isNotOnlyDivBy_2_3_5_7(extents_[k]) ){
-          return 1;
-        }
-      }
-      return 3;
-    }
     /* setters */
 
     void setRun(int run) {
@@ -141,32 +123,6 @@ namespace gearshifft
     std::string error_;
     /// Run where error occurred
     int errorRun_;
-
-  private:
-    bool powerOf(size_t e, double b) {
-      if(e==0)
-        return false;
-      double a = static_cast<double>(e);
-      double p = floor(log(a)/log(b)+0.5);
-      return fabs(pow(b,p)-a)<0.0001;
-    }
-
-    bool isNotOnlyDivBy_2_3_5_7(size_t e) {
-      if(e==2 || e==3 || e==5 || e==7)
-        return false;
-      size_t t = e;
-      size_t sqr = static_cast<size_t>(sqrt(e));
-      for( size_t d=2; d<=sqr; ++d ) {
-        // if e contains divisors > 7
-        if( e%d == 0 && d>7 )
-          return true;
-        // e = e / d^q
-        while( e%d == 0 ) {
-          e /= d;
-        }
-      }
-      return e==t || e>7; // e might be a prime or a divisor>7
-    }
 
   };
 }

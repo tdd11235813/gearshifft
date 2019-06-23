@@ -5,6 +5,7 @@
 #include "result_all.hpp"
 #include "timer_cpu.hpp"
 #include "types.hpp"
+#include "utils.hpp"
 
 #include "gearshifft_version.hpp"
 
@@ -34,11 +35,6 @@
 
 #ifndef GEARSHIFFT_ERROR_BOUND
 #define GEARSHIFFT_ERROR_BOUND 0.00001
-#endif
-
-#ifndef GEARSHIFFT_STRINGIFY
-#define GEARSHIFFT_STRINGIFY_EXPAND(tok) #tok
-#define GEARSHIFFT_STRINGIFY(s) GEARSHIFFT_STRINGIFY_EXPAND(s)
 #endif
 
 namespace gearshifft {
