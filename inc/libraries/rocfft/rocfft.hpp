@@ -27,7 +27,7 @@ namespace RocFFT {
     template<typename T_Precision=float>
     struct Types
     {
-        using ComplexType = std::complex<float>;
+        using ComplexType = float2;//std::complex<float>;
         using RealType = float;
 
         static constexpr rocfft_transform_type_e FFTRealForward = rocfft_transform_type_real_forward;
@@ -42,7 +42,7 @@ namespace RocFFT {
     template<>
     struct Types<double>
     {
-        using ComplexType = std::complex<double>;
+        using ComplexType = double2;//std::complex<double>;
         using RealType = double;
 
         static constexpr rocfft_transform_type_e FFTRealForward = rocfft_transform_type_real_forward;

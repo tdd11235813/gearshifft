@@ -72,6 +72,14 @@ namespace gearshifft {
         {
           result.setRun(r);
           dataset.copyTo(data_buffer);
+          // if(r==0) {
+          //   std::cout << "Original\n";
+          //   utils::print(std::cout, data_buffer.data(), extents, 0, 10);
+          //   fft(result, data_buffer, extents);
+          //   std::cout << "Result\n";
+          //   utils::print(std::cout, data_buffer.data(), extents, 0, 10,
+          //                T_FFT_Normalized::value ? 1.0 : 1.0/utils::extentsProduct(extents));
+          // } else
           fft(result, data_buffer, extents);
 
           double deviation = 0.0; // sample standard deviation

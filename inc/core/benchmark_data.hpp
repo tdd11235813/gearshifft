@@ -78,7 +78,7 @@ namespace gearshifft {
           ++mismatches;
         diff_sum += diff*diff;
       }
-      deviation = sqrt(diff_sum/(size_-1.0));
+      deviation = std::sqrt(diff_sum/(size_-1.0));
     }
 
   private:
