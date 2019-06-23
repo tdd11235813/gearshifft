@@ -23,7 +23,7 @@ namespace gearshifft {
 namespace RocFFT {
 
     inline void getRocfftVersion(int *version){
-        *version = 10000*rocfft_version_major + 100*rocfft_version_minor + rocfft_version_patch;
+        *version = 10000*rocfft_version_major + 100*rocfft_version_minor + 10*rocfft_version_patch + rocfft_version_tweak;
     }
 
   inline
